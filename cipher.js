@@ -1,40 +1,43 @@
 "use strict";
-var firstLetter = 'a'.charCodeAt(0);
-var lastLetter = 'z'.charCodeAt(0);
-function shiftCipher(cipher, shift) {
-    if (shift === void 0) { shift = 1; }
-    return cipherTransition(cipher, shift);
+const aCodeAscii = 'a'.charCodeAt(0);
+const zCodeAscii = 'z'.charCodeAt(0);
+const nEnglishLetters = zCodeAscii - aCodeAscii + 1;
+function shiftCipher(str, shift = 1) {
+    return cipherDecipher(str, shift, mapperCipher);
 }
-function shiftDecipher(cipher, shift) {
-    if (shift === void 0) { shift = 1; }
-    return cipherTransition(cipher, -shift);
+function shiftDecipher(str, shift = 1) {
+    return cipherDecipher(str, shift, mapperDecipher);
 }
-function cipherTransition(cipher, shift) {
-    shift = shift % (lastLetter - firstLetter);
-    var cipherArray = cipher.split('');
-    cipherArray.forEach(function (letter, index, array) {
-        var codeAscii = letter.charCodeAt(0);
-        if (codeAscii >= firstLetter && codeAscii <= lastLetter) {
-            codeAscii = codeAscii + shift;
-            if (codeAscii > lastLetter) {
-                codeAscii = firstLetter + (codeAscii - lastLetter);
-            }
-            else if (codeAscii < firstLetter) {
-                codeAscii = lastLetter - (firstLetter - codeAscii);
-            }
-            array[index] = String.fromCharCode(codeAscii);
+function cipherDecipher(str, shift, mapperFun) {
+    //const arStr: string[] = Array.from(str);
+    const arStr = Array.from(str);
+    const arRes = arStr.map(symb => {
+        let res = symb;
+        if (symb <= 'z' && symb >= 'a') {
+            res = mapperFun(symb, shift);
         }
+        return res;
     });
-    return cipherArray.join('');
+    return arRes.join('');
 }
-var message = 'Abdg132';
-var shift = 105; // 105 % 25 = 5;
-var shiftCipherResult = shiftCipher(message, shift);
-var shiftDecipherResult = shiftDecipher(shiftCipherResult, shift);
-var shiftCipherResultDefault = shiftCipher(message); // Shift default = 1;
-var shiftDecipherResultDefault = shiftDecipher(shiftCipherResultDefault);
-console.log('Message ', message, shift, lastLetter - firstLetter);
-console.log("Ciphered message with shift = ".concat(shift, ": "), shiftCipherResult);
-console.log("Deciphered message  with shift = ".concat(shift, ": "), shiftDecipherResult);
-console.log('Ciphered message with default shift: ', shiftCipherResultDefault);
-console.log('Deciphered message with default shift: ', shiftDecipherResultDefault);
+function mapperCipher(symb, shift) {
+    const actualShift = (symb.charCodeAt(0) - aCodeAscii + shift) % nEnglishLetters;
+    return String.fromCharCode(aCodeAscii + actualShift);
+}
+function mapperDecipher(symb, shift) {
+    const actualShift = (zCodeAscii - symb.charCodeAt(0) + shift) % nEnglishLetters;
+    return String.fromCharCode(zCodeAscii - actualShift);
+}
+function testCipherDecipher(data, testName) {
+    console.log(`${"*".repeat(10)}${testName}${"*".repeat(10)}`);
+    const funForTest = testName === "cipherTest" ? shiftCipher : shiftDecipher;
+    data.forEach((obj => console.log(`str=${obj.str}, shift=${obj.shift || 1} => ${funForTest(obj.str, obj.shift)}`)));
+}
+const dataForCipherTest = [
+    { str: "abc" }, { str: "abz", shift: 1000 }
+];
+testCipherDecipher(dataForCipherTest, "cipherTest");
+const dataForDecipherTest = [
+    { str: "bcd" }, { str: "mnl", shift: 1000 }
+];
+testCipherDecipher(dataForDecipherTest, "decipherTest");
